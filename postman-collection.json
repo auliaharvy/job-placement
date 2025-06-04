@@ -1,0 +1,424 @@
+{
+  "info": {
+    "name": "Job Placement System API",
+    "description": "Complete API collection for Job Placement System testing",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"admin@jobplacement.com\",\n    \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Applicant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"email\": \"john.test@example.com\",\n    \"phone\": \"081234567890\",\n    \"nik\": \"3201234567890124\",\n    \"birth_date\": \"1995-03-15\",\n    \"birth_place\": \"Jakarta\",\n    \"gender\": \"male\",\n    \"address\": \"Jl. Test No. 123\",\n    \"city\": \"Jakarta\",\n    \"province\": \"DKI Jakarta\",\n    \"whatsapp_number\": \"081234567890\",\n    \"education_level\": \"s1\",\n    \"school_name\": \"Universitas Test\",\n    \"graduation_year\": 2018,\n    \"referral_code\": \"RINI001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/applicant",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", "applicant"]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Applicants",
+      "item": [
+        {
+          "name": "Get All Applicants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/applicants",
+              "host": ["{{base_url}}"],
+              "path": ["applicants"]
+            }
+          }
+        },
+        {
+          "name": "Get Applicant by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/applicants/1",
+              "host": ["{{base_url}}"],
+              "path": ["applicants", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Applicants Statistics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/applicants/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["applicants", "statistics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Job Postings",
+      "item": [
+        {
+          "name": "Get All Jobs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/jobs",
+              "host": ["{{base_url}}"],
+              "path": ["jobs"]
+            }
+          }
+        },
+        {
+          "name": "Create Job Posting",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"company_id\": 1,\n    \"title\": \"Test Developer\",\n    \"position\": \"Test Developer\",\n    \"employment_type\": \"pkwt\",\n    \"description\": \"We are looking for a skilled developer...\",\n    \"work_location\": \"Jakarta Office\",\n    \"work_city\": \"Jakarta\",\n    \"work_province\": \"DKI Jakarta\",\n    \"work_arrangement\": \"hybrid\",\n    \"salary_min\": 8000000,\n    \"salary_max\": 15000000,\n    \"application_deadline\": \"2024-07-30\",\n    \"required_education_levels\": [\"s1\"],\n    \"min_experience_months\": 24,\n    \"required_skills\": [\"PHP\", \"Laravel\"],\n    \"total_positions\": 2,\n    \"priority\": \"high\",\n    \"publish_immediately\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jobs",
+              "host": ["{{base_url}}"],
+              "path": ["jobs"]
+            }
+          }
+        },
+        {
+          "name": "Get Job by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/jobs/1",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Matching Applicants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/jobs/1/matching-applicants",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "1", "matching-applicants"]
+            }
+          }
+        },
+        {
+          "name": "Broadcast WhatsApp",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/jobs/1/broadcast-whatsapp",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "1", "broadcast-whatsapp"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "item": [
+        {
+          "name": "Get All Applications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/applications",
+              "host": ["{{base_url}}"],
+              "path": ["applications"]
+            }
+          }
+        },
+        {
+          "name": "Submit Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"applicant_id\": 1,\n    \"job_posting_id\": 1,\n    \"source\": \"direct\",\n    \"applicant_notes\": \"I am very interested in this position...\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/applications",
+              "host": ["{{base_url}}"],
+              "path": ["applications"]
+            }
+          }
+        },
+        {
+          "name": "Schedule Interview",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"interview_scheduled_at\": \"2024-06-10 10:00:00\",\n    \"interview_location\": \"Jakarta Office, Meeting Room A\",\n    \"interview_type\": \"offline\",\n    \"notes\": \"Please bring your portfolio\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/applications/1/schedule-interview",
+              "host": ["{{base_url}}"],
+              "path": ["applications", "1", "schedule-interview"]
+            }
+          }
+        },
+        {
+          "name": "Accept Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"notes\": \"Excellent candidate, all stages passed successfully\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/applications/1/accept",
+              "host": ["{{base_url}}"],
+              "path": ["applications", "1", "accept"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Placements",
+      "item": [
+        {
+          "name": "Get All Placements",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/placements",
+              "host": ["{{base_url}}"],
+              "path": ["placements"]
+            }
+          }
+        },
+        {
+          "name": "Create Placement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"application_id\": 1,\n    \"employee_id\": \"EMP001\",\n    \"position_title\": \"Full Stack Developer\",\n    \"department\": \"IT Development\",\n    \"work_location\": \"Jakarta Office\",\n    \"contract_type\": \"pkwt\",\n    \"start_date\": \"2024-06-15\",\n    \"end_date\": \"2025-06-14\",\n    \"contract_duration_months\": 12,\n    \"salary\": 12000000,\n    \"is_renewable\": true,\n    \"placement_notes\": \"New hire for development team\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/placements",
+              "host": ["{{base_url}}"],
+              "path": ["placements"]
+            }
+          }
+        },
+        {
+          "name": "Get Expiring Placements",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/placements/expiring?days=30",
+              "host": ["{{base_url}}"],
+              "path": ["placements", "expiring"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Performance Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"review_period\": \"Q1 2024\",\n    \"score\": 85,\n    \"attendance\": 95,\n    \"punctuality\": 90,\n    \"work_quality\": 88,\n    \"teamwork\": 92,\n    \"communication\": 87,\n    \"feedback\": \"Excellent performance overall, shows strong technical skills\",\n    \"strengths\": [\"Technical expertise\", \"Problem solving\", \"Team collaboration\"],\n    \"areas_for_improvement\": [\"Time management\", \"Documentation\"],\n    \"goals_next_period\": [\"Complete advanced certification\", \"Lead junior developer mentoring\"],\n    \"reviewer_name\": \"Sarah Manager\",\n    \"reviewer_position\": \"Development Manager\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/placements/1/add-review",
+              "host": ["{{base_url}}"],
+              "path": ["placements", "1", "add-review"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public Endpoints",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8000/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8000/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Public Job Listings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/jobs/public",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "public"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
