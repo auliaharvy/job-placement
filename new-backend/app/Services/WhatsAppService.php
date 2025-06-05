@@ -38,7 +38,7 @@ class WhatsAppService
         $message .= "🔑 Password: NIK Anda\n\n";
         $message .= "Anda akan mendapat notifikasi untuk lowongan yang sesuai dengan profil Anda.\n\n";
         $message .= "Terima kasih telah bergabung! 🙏";
-        
+
         return $this->sendMessage($applicant->phone, $message, 'welcome');
     }
 
@@ -49,7 +49,7 @@ class WhatsAppService
     {
         $successCount = 0;
         $failedCount = 0;
-        
+
         $message = "🚀 *LOWONGAN KERJA BARU* 🚀\n\n";
         $message .= "🏢 Perusahaan: {$job->company->name}\n";
         $message .= "💼 Posisi: {$job->title}\n";
@@ -57,7 +57,7 @@ class WhatsAppService
         $message .= "⏰ Deadline: " . $job->application_deadline->format('d M Y') . "\n";
         $message .= "👥 Kuota: {$job->total_positions} orang\n\n";
         $message .= "📋 Persyaratan:\n";
-        
+
         if ($job->min_age || $job->max_age) {
             $ageRange = '';
             if ($job->min_age && $job->max_age) {
@@ -69,18 +69,18 @@ class WhatsAppService
             }
             $message .= "• Usia: {$ageRange}\n";
         }
-        
+
         if ($job->required_education_levels && count($job->required_education_levels) > 0) {
             $message .= "• Pendidikan: " . implode(', ', array_map('strtoupper', $job->required_education_levels)) . "\n";
         }
-        
+
         if ($job->min_experience_months) {
             $message .= "• Pengalaman: " . round($job->min_experience_months / 12, 1) . " tahun\n";
         }
-        
+
         $message .= "\n🔗 Daftar sekarang melalui aplikasi atau hubungi kami!\n";
         $message .= "\n_Pesan ini dikirim karena profil Anda sesuai dengan persyaratan lowongan._";
-        
+
         foreach ($applicants as $applicant) {
             try {
                 if ($this->sendMessage($applicant->phone, $message, 'job_broadcast', $job->id)) {
@@ -95,7 +95,7 @@ class WhatsAppService
                 Log::error("Failed to send WhatsApp to {$applicant->phone}: " . $e->getMessage());
             }
         }
-        
+
         return [
             'total_sent' => $successCount,
             'total_failed' => $failedCount,
@@ -117,10 +117,10 @@ class WhatsAppService
         $message .= "📅 Tanggal Apply: " . $application->applied_at->format('d M Y H:i') . "\n\n";
         $message .= "Kami akan menginformasikan perkembangan seleksi melalui WhatsApp ini.\n\n";
         $message .= "Terima kasih! 🙏";
-        
+
         return $this->sendMessage(
-            $application->applicant->phone, 
-            $message, 
+            $application->applicant->phone,
+            $message,
             'application_confirmation',
             $application->id
         );
@@ -132,14 +132,14 @@ class WhatsAppService
     public function sendStageUpdateNotification(Application $application): bool
     {
         $stageName = $this->getStageDisplayName($application->selection_stage);
-        
+
         $message = "📢 *UPDATE STATUS SELEKSI* 📢\n\n";
         $message .= "Halo {$application->applicant->full_name},\n\n";
         $message .= "Status seleksi Anda telah diperbarui:\n";
         $message .= "💼 Posisi: {$application->jobPosting->title}\n";
         $message .= "🏢 Perusahaan: {$application->jobPosting->company->name}\n";
         $message .= "📋 Status Terbaru: *{$stageName}*\n\n";
-        
+
         switch ($application->selection_stage) {
             case Application::STAGE_PSYCOTEST:
                 $message .= "🧠 Anda akan menjalani tes psikologi.\n";
@@ -154,12 +154,12 @@ class WhatsAppService
                 $message .= "📅 Jadwal akan diinformasikan segera.\n";
                 break;
         }
-        
+
         $message .= "\nSelamat! Anda semakin dekat dengan kesempatan kerja ini! 🎉";
-        
+
         return $this->sendMessage(
-            $application->applicant->phone, 
-            $message, 
+            $application->applicant->phone,
+            $message,
             'stage_update',
             $application->id
         );
@@ -184,10 +184,10 @@ class WhatsAppService
         $message .= "3. Datang tepat waktu pada hari pertama\n\n";
         $message .= "Tim kami akan menghubungi Anda untuk detail lebih lanjut.\n\n";
         $message .= "Selamat dan sukses untuk karier baru Anda! 🚀";
-        
+
         return $this->sendMessage(
-            $application->applicant->phone, 
-            $message, 
+            $application->applicant->phone,
+            $message,
             'acceptance',
             $placement->id
         );
@@ -207,10 +207,10 @@ class WhatsAppService
         $message .= "Namun, profil Anda tetap tersimpan dalam database kami dan akan dipertimbangkan untuk kesempatan lain yang sesuai.\n\n";
         $message .= "Jangan menyerah! Tetap semangat mencari peluang kerja yang tepat! 💪\n\n";
         $message .= "Terima kasih dan semoga sukses! 🙏";
-        
+
         return $this->sendMessage(
-            $application->applicant->phone, 
-            $message, 
+            $application->applicant->phone,
+            $message,
             'rejection',
             $application->id
         );
@@ -232,10 +232,10 @@ class WhatsAppService
         $message .= "• Kesempatan kerja lainnya\n";
         $message .= "• Proses handover\n\n";
         $message .= "Terima kasih atas dedikasi Anda! 🙏";
-        
+
         return $this->sendMessage(
-            $placement->applicant->phone, 
-            $message, 
+            $placement->applicant->phone,
+            $message,
             'contract_reminder',
             $placement->id
         );
@@ -251,7 +251,7 @@ class WhatsAppService
             'interview' => 'Wawancara',
             'medical' => 'Medical Check-up'
         ][$type] ?? 'Jadwal';
-        
+
         $message = "⏰ *PENGINGAT JADWAL* ⏰\n\n";
         $message .= "Halo {$application->applicant->full_name},\n\n";
         $message .= "Pengingat untuk jadwal {$typeName} Anda:\n\n";
@@ -260,7 +260,7 @@ class WhatsAppService
         $message .= "📅 Tanggal: " . $scheduleDate->format('d M Y') . "\n";
         $message .= "🕒 Waktu: " . $scheduleDate->format('H:i') . " WIB\n\n";
         $message .= "📋 *PERSIAPAN:*\n";
-        
+
         switch ($type) {
             case 'psycotest':
                 $message .= "• Bawa KTP asli\n";
@@ -278,12 +278,12 @@ class WhatsAppService
                 $message .= "• Istirahat yang cukup\n";
                 break;
         }
-        
+
         $message .= "\nSemoga sukses! 🍀";
-        
+
         return $this->sendMessage(
-            $application->applicant->phone, 
-            $message, 
+            $application->applicant->phone,
+            $message,
             'schedule_reminder',
             $application->id
         );
@@ -292,7 +292,7 @@ class WhatsAppService
     /**
      * Metode dasar untuk mengirim pesan
      */
-    private function sendMessage(string $phone, string $message, string $type = 'general', $referenceId = null): bool
+    public function sendMessage(string $phone, string $message, string $type = 'general', $referenceId = null): bool
     {
         try {
             $response = Http::timeout(30)->post($this->baseUrl . '/message/send-text', [
@@ -328,14 +328,14 @@ class WhatsAppService
     {
         // Remove any non-digit characters
         $phone = preg_replace('/[^0-9]/', '', $phone);
-        
+
         // Convert Indonesian format to international
         if (substr($phone, 0, 1) === '0') {
             $phone = '62' . substr($phone, 1);
         } elseif (substr($phone, 0, 2) !== '62') {
             $phone = '62' . $phone;
         }
-        
+
         return $phone;
     }
 
@@ -351,7 +351,7 @@ class WhatsAppService
             Application::STAGE_MEDICAL => 'Medical Check-up',
             Application::STAGE_FINAL => 'Evaluasi Akhir',
         ];
-        
+
         return $stages[$stage] ?? 'Tidak Diketahui';
     }
 
@@ -371,17 +371,17 @@ class WhatsAppService
             try {
                 $phone = is_array($recipient) ? $recipient['phone'] : $recipient;
                 $name = is_array($recipient) ? $recipient['name'] : '';
-                
+
                 // Personalize message if name is provided
                 $personalizedMessage = $name ? str_replace('{name}', $name, $message) : $message;
-                
+
                 if ($this->sendMessage($phone, $personalizedMessage, 'bulk')) {
                     $results['total_sent']++;
                 } else {
                     $results['total_failed']++;
                     $results['failed_numbers'][] = $phone;
                 }
-                
+
                 // Add delay to prevent rate limiting
                 usleep(750000); // 0.75 second delay
             } catch (\Exception $e) {
@@ -408,7 +408,7 @@ class WhatsAppService
         ];
 
         $template = $templates[$templateName] ?? '';
-        
+
         // Replace variables in template
         foreach ($variables as $key => $value) {
             $template = str_replace('{' . $key . '}', $value, $template);
@@ -463,7 +463,7 @@ class WhatsAppService
     public function getMessageStats(Carbon $startDate = null, Carbon $endDate = null): array
     {
         $query = WhatsAppLog::query();
-        
+
         if ($startDate) {
             $query->where('created_at', '>=', $startDate);
         }
@@ -497,23 +497,39 @@ class WhatsAppService
         try {
             // Check all sessions to see if our session exists
             $response = Http::timeout(10)->get($this->baseUrl . '/session');
-
             if ($response->successful()) {
-                $sessions = $response->json();
+                $responseData = $response->json();
                 $ourSession = config('whatsapp.default_session', 'job-placement');
-                
+
                 // Check if our session is in the list
                 $sessionExists = false;
-                if (is_array($sessions)) {
-                    $sessionExists = in_array($ourSession, $sessions) || 
-                                   (isset($sessions['sessions']) && in_array($ourSession, $sessions['sessions']));
+                $sessionsList = [];
+                
+                // Handle different response structures
+                if (isset($responseData['success']) && $responseData['success'] && isset($responseData['data']['data'])) {
+                    // Structure: {"success": true, "data": {"data": ["session1", "session2"]}}
+                    $sessionsList = $responseData['data']['data'];
+                    $sessionExists = in_array($ourSession, $sessionsList);
+                } elseif (isset($responseData['data']) && is_array($responseData['data'])) {
+                    // Structure: {"data": ["session1", "session2"]}
+                    $sessionsList = $responseData['data'];
+                    $sessionExists = in_array($ourSession, $sessionsList);
+                } elseif (is_array($responseData)) {
+                    // Direct array: ["session1", "session2"]
+                    $sessionsList = $responseData;
+                    $sessionExists = in_array($ourSession, $sessionsList);
+                } elseif (isset($responseData['sessions']) && is_array($responseData['sessions'])) {
+                    // Structure: {"sessions": ["session1", "session2"]}
+                    $sessionsList = $responseData['sessions'];
+                    $sessionExists = in_array($ourSession, $sessionsList);
                 }
 
                 return [
                     'status' => $sessionExists ? 'connected' : 'session_not_found',
                     'response_time' => $response->handlerStats()['total_time'] ?? 0,
                     'session' => $ourSession,
-                    'all_sessions' => $sessions,
+                    'all_sessions' => $responseData,
+                    'session_list' => $sessionsList,
                     'session_exists' => $sessionExists
                 ];
             }

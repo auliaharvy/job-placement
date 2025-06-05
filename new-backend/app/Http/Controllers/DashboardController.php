@@ -47,11 +47,15 @@ class DashboardController extends Controller
                 break;
                 
             case 'agent':
-                $dashboardData['agent_metrics'] = $this->getAgentMetrics($user->agent, $startDate, $endDate);
+                if ($user->agent) {
+                    $dashboardData['agent_metrics'] = $this->getAgentMetrics($user->agent, $startDate, $endDate);
+                }
                 break;
                 
             case 'applicant':
-                $dashboardData['applicant_metrics'] = $this->getApplicantMetrics($user->applicant);
+                if ($user->applicant) {
+                    $dashboardData['applicant_metrics'] = $this->getApplicantMetrics($user->applicant);
+                }
                 break;
         }
 
@@ -68,26 +72,26 @@ class DashboardController extends Controller
     {
         return [
             'total_applicants' => Applicant::count(),
-            'active_applicants' => Applicant::active()->count(),
+            'active_applicants' => Applicant::where('work_status', 'available')->count(),
             'new_applicants_this_period' => Applicant::whereBetween('created_at', [$startDate, $endDate])->count(),
             
             'total_job_postings' => JobPosting::count(),
-            'active_job_postings' => JobPosting::active()->count(),
+            'active_job_postings' => JobPosting::where('status', 'active')->count(),
             'new_jobs_this_period' => JobPosting::whereBetween('created_at', [$startDate, $endDate])->count(),
             
             'total_applications' => Application::count(),
-            'active_applications' => Application::active()->count(),
+            'active_applications' => Application::whereIn('status', ['active', 'in_progress'])->count(),
             'new_applications_this_period' => Application::whereBetween('applied_at', [$startDate, $endDate])->count(),
             
             'total_placements' => Placement::count(),
-            'active_placements' => Placement::active()->count(),
+            'active_placements' => Placement::where('status', 'active')->count(),
             'new_placements_this_period' => Placement::whereBetween('start_date', [$startDate, $endDate])->count(),
             
             'total_agents' => Agent::count(),
-            'active_agents' => Agent::active()->count(),
+            'active_agents' => Agent::where('status', 'active')->count(),
             
             'total_companies' => Company::count(),
-            'active_companies' => Company::active()->count(),
+            'active_companies' => Company::where('status', 'active')->count(),
         ];
     }
 
@@ -111,9 +115,12 @@ class DashboardController extends Controller
      */
     private function getApplicantsTrend(string $startDate, string $endDate): array
     {
-        $data = Applicant::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+        // Use database-agnostic date functions
+        $dateFormat = $this->getDateFormat();
+        
+        $data = Applicant::selectRaw("{$dateFormat}(created_at) as date, COUNT(*) as count")
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy('date')
+            ->groupBy(DB::raw("{$dateFormat}(created_at)"))
             ->orderBy('date')
             ->get()
             ->keyBy('date')
@@ -172,19 +179,18 @@ class DashboardController extends Controller
      */
     private function getPlacementsByCompany(): array
     {
-        return Placement::with('company')
-            ->selectRaw('company_id, COUNT(*) as count')
-            ->groupBy('company_id')
+        return Placement::join('companies', 'placements.company_id', '=', 'companies.id')
+            ->selectRaw('companies.name as company_name, COUNT(*) as count')
+            ->groupBy('companies.id', 'companies.name')
             ->orderByDesc('count')
             ->limit(10)
             ->get()
             ->map(function ($item) {
                 return [
-                    'company_name' => $item->company->name ?? 'Unknown',
+                    'company_name' => $item->company_name ?? 'Unknown',
                     'count' => $item->count,
                 ];
             })
-            ->values()
             ->toArray();
     }
 
@@ -215,9 +221,11 @@ class DashboardController extends Controller
      */
     private function getAgentPerformance(): array
     {
-        return Agent::with('user')
-            ->select('id', 'user_id', 'agent_code', 'total_referrals', 'successful_placements', 'success_rate', 'level')
-            ->orderByDesc('total_points')
+        return Agent::join('users', 'agents.user_id', '=', 'users.id')
+            ->select('agents.id', 'agents.agent_code', 'agents.total_referrals', 
+                    'agents.successful_placements', 'agents.success_rate', 'agents.level',
+                    DB::raw("CONCAT(users.first_name, ' ', users.last_name) as full_name"))
+            ->orderByDesc('agents.total_points')
             ->limit(10)
             ->get()
             ->map(function ($agent) {
@@ -226,7 +234,7 @@ class DashboardController extends Controller
                     'agent_code' => $agent->agent_code,
                     'total_referrals' => $agent->total_referrals,
                     'successful_placements' => $agent->successful_placements,
-                    'success_rate' => $agent->success_rate,
+                    'success_rate' => $agent->success_rate ?? 0,
                     'level' => $agent->level,
                 ];
             })
@@ -238,18 +246,24 @@ class DashboardController extends Controller
      */
     private function getJobSuccessRate(): array
     {
-        return JobPosting::with('company')
-            ->selectRaw('id, title, company_id, total_applications, total_hired, (total_hired / NULLIF(total_applications, 0) * 100) as success_rate')
-            ->whereRaw('total_applications > 0')
+        return JobPosting::join('companies', 'job_postings.company_id', '=', 'companies.id')
+            ->selectRaw('job_postings.id, job_postings.title, companies.name as company_name, 
+                        job_postings.total_applications, job_postings.total_hired, 
+                        CASE 
+                            WHEN job_postings.total_applications > 0 
+                            THEN (job_postings.total_hired::float / job_postings.total_applications * 100) 
+                            ELSE 0 
+                        END as success_rate')
+            ->where('job_postings.total_applications', '>', 0)
             ->orderByDesc('success_rate')
             ->limit(10)
             ->get()
             ->map(function ($job) {
                 return [
                     'job_title' => $job->title,
-                    'company_name' => $job->company->name ?? 'Unknown',
-                    'total_applications' => $job->total_applications,
-                    'total_hired' => $job->total_hired,
+                    'company_name' => $job->company_name ?? 'Unknown',
+                    'total_applications' => $job->total_applications ?? 0,
+                    'total_hired' => $job->total_hired ?? 0,
                     'success_rate' => round($job->success_rate ?? 0, 2),
                 ];
             })
@@ -264,8 +278,9 @@ class DashboardController extends Controller
         $activities = collect();
 
         // Recent applicant registrations
-        $recentApplicants = Applicant::with('user', 'agent.user')
-            ->orderBy('created_at', 'desc')
+        $recentApplicants = Applicant::join('users', 'applicants.user_id', '=', 'users.id')
+            ->select('applicants.*', DB::raw("CONCAT(users.first_name, ' ', users.last_name) as full_name"))
+            ->orderBy('applicants.created_at', 'desc')
             ->limit(5)
             ->get()
             ->map(function ($applicant) {
@@ -276,7 +291,6 @@ class DashboardController extends Controller
                         'applicant_name' => $applicant->full_name,
                         'education_level' => $applicant->education_level,
                         'city' => $applicant->city,
-                        'agent' => $applicant->agent ? $applicant->agent->full_name : null,
                     ],
                     'timestamp' => $applicant->created_at,
                     'icon' => 'user-plus',
@@ -285,20 +299,20 @@ class DashboardController extends Controller
             });
 
         // Recent job postings
-        $recentJobs = JobPosting::with('company', 'creator')
-            ->orderBy('created_at', 'desc')
+        $recentJobs = JobPosting::join('companies', 'job_postings.company_id', '=', 'companies.id')
+            ->select('job_postings.*', 'companies.name as company_name')
+            ->orderBy('job_postings.created_at', 'desc')
             ->limit(5)
             ->get()
             ->map(function ($job) {
                 return [
                     'type' => 'job_posted',
-                    'message' => "New job '{$job->title}' posted by {$job->company->name}",
+                    'message' => "New job '{$job->title}' posted by {$job->company_name}",
                     'details' => [
                         'job_title' => $job->title,
-                        'company_name' => $job->company->name,
+                        'company_name' => $job->company_name,
                         'employment_type' => $job->employment_type,
                         'priority' => $job->priority,
-                        'created_by' => $job->creator->full_name,
                     ],
                     'timestamp' => $job->created_at,
                     'icon' => 'briefcase',
@@ -307,17 +321,22 @@ class DashboardController extends Controller
             });
 
         // Recent placements
-        $recentPlacements = Placement::with('applicant.user', 'company')
-            ->orderBy('start_date', 'desc')
+        $recentPlacements = Placement::join('applicants', 'placements.applicant_id', '=', 'applicants.id')
+            ->join('users', 'applicants.user_id', '=', 'users.id')
+            ->join('companies', 'placements.company_id', '=', 'companies.id')
+            ->select('placements.*', 
+                    DB::raw("CONCAT(users.first_name, ' ', users.last_name) as applicant_name"),
+                    'companies.name as company_name')
+            ->orderBy('placements.start_date', 'desc')
             ->limit(5)
             ->get()
             ->map(function ($placement) {
                 return [
                     'type' => 'placement_created',
-                    'message' => "{$placement->applicant->full_name} placed at {$placement->company->name}",
+                    'message' => "{$placement->applicant_name} placed at {$placement->company_name}",
                     'details' => [
-                        'applicant_name' => $placement->applicant->full_name,
-                        'company_name' => $placement->company->name,
+                        'applicant_name' => $placement->applicant_name,
+                        'company_name' => $placement->company_name,
                         'position_title' => $placement->position_title,
                         'contract_type' => $placement->contract_type,
                     ],
@@ -346,7 +365,9 @@ class DashboardController extends Controller
         $alerts = [];
 
         // Expiring contracts alert
-        $expiringContracts = Placement::expiring(30)->count();
+        $expiringContracts = Placement::where('end_date', '<=', now()->addDays(30))
+                                    ->where('status', 'active')
+                                    ->count();
         if ($expiringContracts > 0) {
             $alerts[] = [
                 'type' => 'warning',
@@ -358,7 +379,9 @@ class DashboardController extends Controller
         }
 
         // Urgent job postings
-        $urgentJobs = JobPosting::active()->urgent()->count();
+        $urgentJobs = JobPosting::where('status', 'active')
+                               ->where('priority', 'urgent')
+                               ->count();
         if ($urgentJobs > 0) {
             $alerts[] = [
                 'type' => 'error',
@@ -408,10 +431,10 @@ class DashboardController extends Controller
         return [
             'revenue_metrics' => [
                 'total_placements_value' => Placement::whereBetween('start_date', [$startDate, $endDate])
-                                                   ->sum('salary'),
-                'total_commission_paid' => Agent::sum('total_commission'),
+                                                   ->sum('salary') ?? 0,
+                'total_commission_paid' => Agent::sum('total_commission') ?? 0,
                 'avg_placement_salary' => Placement::whereBetween('start_date', [$startDate, $endDate])
-                                                 ->avg('salary'),
+                                                 ->avg('salary') ?? 0,
             ],
             'growth_metrics' => [
                 'applicant_growth_rate' => $this->calculateGrowthRate('applicants', $startDate, $endDate),
@@ -421,14 +444,7 @@ class DashboardController extends Controller
             'efficiency_metrics' => [
                 'avg_time_to_placement' => $this->calculateAverageTimeToPlacement(),
                 'application_to_placement_ratio' => $this->calculateApplicationToPlacementRatio(),
-                'top_performing_agents' => Agent::topPerformers(5)->get()->map(function ($agent) {
-                    return [
-                        'name' => $agent->full_name,
-                        'level' => $agent->level,
-                        'success_rate' => $agent->success_rate,
-                        'total_commission' => $agent->total_commission,
-                    ];
-                }),
+                'top_performing_agents' => $this->getTopPerformingAgents(),
             ],
         ];
     }
@@ -451,7 +467,7 @@ class DashboardController extends Controller
             ],
             'upcoming_tasks' => [
                 'interviews_this_week' => Application::whereBetween('interview_scheduled_at', [now(), now()->addWeek()])->count(),
-                'contracts_expiring_this_month' => Placement::expiring(30)->count(),
+                'contracts_expiring_this_month' => Placement::where('end_date', '<=', now()->addDays(30))->count(),
                 'job_deadlines_this_week' => JobPosting::whereBetween('application_deadline', [now(), now()->addWeek()])->count(),
             ],
         ];
@@ -464,32 +480,24 @@ class DashboardController extends Controller
     {
         return [
             'personal_stats' => [
-                'total_referrals' => $agent->total_referrals,
-                'successful_placements' => $agent->successful_placements,
-                'success_rate' => $agent->success_rate,
-                'current_level' => $agent->level,
-                'total_points' => $agent->total_points,
-                'total_commission' => $agent->total_commission,
+                'total_referrals' => $agent->total_referrals ?? 0,
+                'successful_placements' => $agent->successful_placements ?? 0,
+                'success_rate' => $agent->success_rate ?? 0,
+                'current_level' => $agent->level ?? 'bronze',
+                'total_points' => $agent->total_points ?? 0,
+                'total_commission' => $agent->total_commission ?? 0,
             ],
             'period_performance' => [
-                'new_referrals' => $agent->applicants()->whereBetween('created_at', [$startDate, $endDate])->count(),
-                'new_placements' => $agent->placements()->whereBetween('start_date', [$startDate, $endDate])->count(),
-                'commission_earned' => $agent->placements()->whereBetween('start_date', [$startDate, $endDate])->sum('agent_commission'),
+                'new_referrals' => Applicant::where('agent_id', $agent->id)
+                                          ->whereBetween('created_at', [$startDate, $endDate])
+                                          ->count(),
+                'new_placements' => Placement::where('agent_id', $agent->id)
+                                            ->whereBetween('start_date', [$startDate, $endDate])
+                                            ->count(),
+                'commission_earned' => Placement::where('agent_id', $agent->id)
+                                               ->whereBetween('start_date', [$startDate, $endDate])
+                                               ->sum('agent_commission') ?? 0,
             ],
-            'recent_referrals' => $agent->applicants()
-                                      ->with('user')
-                                      ->orderBy('created_at', 'desc')
-                                      ->limit(10)
-                                      ->get()
-                                      ->map(function ($applicant) {
-                                          return [
-                                              'name' => $applicant->full_name,
-                                              'education_level' => $applicant->education_level,
-                                              'city' => $applicant->city,
-                                              'work_status' => $applicant->work_status,
-                                              'registered_at' => $applicant->created_at,
-                                          ];
-                                      }),
         ];
     }
 
@@ -500,50 +508,33 @@ class DashboardController extends Controller
     {
         return [
             'profile_status' => [
-                'profile_completed' => $applicant->isProfileCompleted(),
-                'work_status' => $applicant->work_status,
+                'work_status' => $applicant->work_status ?? 'available',
                 'profile_completion_percentage' => $this->calculateProfileCompletion($applicant),
             ],
             'application_history' => [
-                'total_applications' => $applicant->applications()->count(),
-                'active_applications' => $applicant->applications()->active()->count(),
-                'successful_placements' => $applicant->placements()->count(),
+                'total_applications' => Application::where('applicant_id', $applicant->id)->count(),
+                'active_applications' => Application::where('applicant_id', $applicant->id)
+                                                   ->whereIn('status', ['active', 'in_progress'])
+                                                   ->count(),
+                'successful_placements' => Placement::where('applicant_id', $applicant->id)->count(),
             ],
-            'recent_applications' => $applicant->applications()
-                                            ->with('jobPosting.company')
-                                            ->orderBy('applied_at', 'desc')
-                                            ->limit(10)
-                                            ->get()
-                                            ->map(function ($application) {
-                                                return [
-                                                    'job_title' => $application->jobPosting->title,
-                                                    'company_name' => $application->jobPosting->company->name,
-                                                    'current_stage' => $application->current_stage,
-                                                    'status' => $application->status,
-                                                    'applied_at' => $application->applied_at,
-                                                ];
-                                            }),
-            'matching_jobs' => JobPosting::active()
-                                        ->limit(5)
-                                        ->get()
-                                        ->filter(function ($job) use ($applicant) {
-                                            $match = $applicant->matchesJobRequirements($job);
-                                            return $match['score'] >= 60; // Only jobs with 60%+ match
-                                        })
-                                        ->map(function ($job) use ($applicant) {
-                                            $match = $applicant->matchesJobRequirements($job);
-                                            return [
-                                                'id' => $job->id,
-                                                'title' => $job->title,
-                                                'company_name' => $job->company->name,
-                                                'work_city' => $job->work_city,
-                                                'salary_range' => $job->salary_range,
-                                                'matching_score' => $match['score'],
-                                                'application_deadline' => $job->application_deadline,
-                                            ];
-                                        })
-                                        ->values(),
         ];
+    }
+
+    /**
+     * Helper method to get database-specific date format
+     */
+    private function getDateFormat(): string
+    {
+        $driver = config('database.default');
+        $connection = config("database.connections.{$driver}.driver");
+        
+        return match($connection) {
+            'mysql' => 'DATE',
+            'pgsql' => 'DATE',
+            'sqlite' => 'date',
+            default => 'DATE',
+        };
     }
 
     /**
@@ -579,15 +570,15 @@ class DashboardController extends Controller
     }
 
     /**
-     * Calculate average time to placement
+     * Calculate average time to placement (PostgreSQL compatible)
      */
     private function calculateAverageTimeToPlacement(): float
     {
-        $avgDays = Application::where('status', 'placed')
-            ->selectRaw('AVG(DATEDIFF(updated_at, applied_at)) as avg_days')
+        $result = Application::where('status', 'placed')
+            ->selectRaw('AVG(EXTRACT(day FROM (updated_at - applied_at))) as avg_days')
             ->value('avg_days');
 
-        return round($avgDays ?? 0, 1);
+        return round($result ?? 0, 1);
     }
 
     /**
@@ -606,15 +597,37 @@ class DashboardController extends Controller
     }
 
     /**
-     * Calculate average application processing time
+     * Calculate average application processing time (PostgreSQL compatible)
      */
     private function calculateAverageProcessingTime(): float
     {
-        $avgDays = Application::whereIn('status', ['accepted', 'rejected'])
-            ->selectRaw('AVG(DATEDIFF(final_decision_at, applied_at)) as avg_days')
+        $result = Application::whereIn('status', ['accepted', 'rejected'])
+            ->whereNotNull('final_decision_at')
+            ->selectRaw('AVG(EXTRACT(day FROM (final_decision_at - applied_at))) as avg_days')
             ->value('avg_days');
 
-        return round($avgDays ?? 0, 1);
+        return round($result ?? 0, 1);
+    }
+
+    /**
+     * Get top performing agents
+     */
+    private function getTopPerformingAgents(): array
+    {
+        return Agent::join('users', 'agents.user_id', '=', 'users.id')
+            ->select('agents.*', DB::raw("CONCAT(users.first_name, ' ', users.last_name) as full_name"))
+            ->orderByDesc('agents.total_points')
+            ->limit(5)
+            ->get()
+            ->map(function ($agent) {
+                return [
+                    'name' => $agent->full_name,
+                    'level' => $agent->level ?? 'bronze',
+                    'success_rate' => $agent->success_rate ?? 0,
+                    'total_commission' => $agent->total_commission ?? 0,
+                ];
+            })
+            ->toArray();
     }
 
     /**
@@ -624,8 +637,7 @@ class DashboardController extends Controller
     {
         $requiredFields = [
             'nik', 'birth_date', 'birth_place', 'gender', 'address', 'city', 'province',
-            'whatsapp_number', 'education_level', 'school_name', 'graduation_year',
-            'work_experience', 'skills', 'preferred_positions', 'ktp_file', 'cv_file'
+            'whatsapp_number', 'education_level', 'school_name', 'graduation_year'
         ];
 
         $completedFields = 0;

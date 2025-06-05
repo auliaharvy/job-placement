@@ -4,7 +4,9 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\Response as ResponseContract;
 
 class RoleMiddleware
 {
@@ -16,7 +18,7 @@ class RoleMiddleware
      * @param  string  ...$roles
      * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
      */
-    public function handle(Request $request, Closure $next, ...$roles): JsonResponse
+    public function handle(Request $request, Closure $next, ...$roles): Response|JsonResponse
     {
         $user = $request->user();
 

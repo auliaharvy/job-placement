@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 
 class UserSeeder extends Seeder
 {
@@ -14,117 +13,81 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = [
-            // Super Admin
+        // Create Super Admin
+        User::updateOrCreate(
+            ['email' => 'admin@jobplacement.com'],
             [
-                'email' => 'admin@jobplacement.com',
-                'password' => Hash::make('admin123'),
-                'role' => 'super_admin',
-                'status' => 'active',
                 'first_name' => 'Super',
                 'last_name' => 'Admin',
-                'phone' => '081234567890',
+                'email' => 'admin@jobplacement.com',
+                'phone' => '+6281234567890',
+                'password' => Hash::make('password123'),
+                'role' => 'super_admin',
+                'status' => 'active',
                 'email_verified_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            
-            // Direktur
+            ]
+        );
+
+        // Create Direktur
+        User::updateOrCreate(
+            ['email' => 'direktur@jobplacement.com'],
             [
+                'first_name' => 'Direktur',
+                'last_name' => 'Utama',
                 'email' => 'direktur@jobplacement.com',
-                'password' => Hash::make('direktur123'),
+                'phone' => '+6281234567891',
+                'password' => Hash::make('password123'),
                 'role' => 'direktur',
                 'status' => 'active',
-                'first_name' => 'Budi',
-                'last_name' => 'Santoso',
-                'phone' => '081234567891',
                 'email_verified_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            
-            // HR Staff
-            [
-                'email' => 'hr1@jobplacement.com',
-                'password' => Hash::make('hr123'),
-                'role' => 'hr_staff',
-                'status' => 'active',
-                'first_name' => 'Sari',
-                'last_name' => 'Wijaya',
-                'phone' => '081234567892',
-                'email_verified_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            
-            [
-                'email' => 'hr2@jobplacement.com',
-                'password' => Hash::make('hr123'),
-                'role' => 'hr_staff',
-                'status' => 'active',
-                'first_name' => 'Andi',
-                'last_name' => 'Pratama',
-                'phone' => '081234567893',
-                'email_verified_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            
-            // Agents
-            [
-                'email' => 'agent1@jobplacement.com',
-                'password' => Hash::make('agent123'),
-                'role' => 'agent',
-                'status' => 'active',
-                'first_name' => 'Rini',
-                'last_name' => 'Maharani',
-                'phone' => '081234567894',
-                'email_verified_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            
-            [
-                'email' => 'agent2@jobplacement.com',
-                'password' => Hash::make('agent123'),
-                'role' => 'agent',
-                'status' => 'active',
-                'first_name' => 'Dedi',
-                'last_name' => 'Kurniawan',
-                'phone' => '081234567895',
-                'email_verified_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            
-            // Sample Applicants
-            [
-                'email' => 'john.doe@gmail.com',
-                'password' => Hash::make('3201234567891234'), // NIK as password
-                'role' => 'applicant',
-                'status' => 'active',
-                'first_name' => 'John',
-                'last_name' => 'Doe',
-                'phone' => '081234567896',
-                'email_verified_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            
-            [
-                'email' => 'jane.smith@gmail.com',
-                'password' => Hash::make('3201234567891235'),
-                'role' => 'applicant',
-                'status' => 'active',
-                'first_name' => 'Jane',
-                'last_name' => 'Smith',
-                'phone' => '081234567897',
-                'email_verified_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ];
+            ]
+        );
 
-        DB::table('users')->insert($users);
+        // Create HR Staff
+        User::updateOrCreate(
+            ['email' => 'hr@jobplacement.com'],
+            [
+                'first_name' => 'HR',
+                'last_name' => 'Staff',
+                'email' => 'hr@jobplacement.com',
+                'phone' => '+6281234567892',
+                'password' => Hash::make('password123'),
+                'role' => 'hr_staff',
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // Create Test Agent
+        User::updateOrCreate(
+            ['email' => 'agent@jobplacement.com'],
+            [
+                'first_name' => 'Test',
+                'last_name' => 'Agent',
+                'email' => 'agent@jobplacement.com',
+                'phone' => '+6281234567893',
+                'password' => Hash::make('password123'),
+                'role' => 'agent',
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // Create Test Applicant
+        User::updateOrCreate(
+            ['email' => 'applicant@jobplacement.com'],
+            [
+                'first_name' => 'Test',
+                'last_name' => 'Applicant',
+                'email' => 'applicant@jobplacement.com',
+                'phone' => '+6281234567894',
+                'password' => Hash::make('password123'),
+                'role' => 'applicant',
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $this->command->info('Users seeded successfully!');
     }
 }
