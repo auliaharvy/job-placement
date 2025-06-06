@@ -1,46 +1,24 @@
 import React, { useState } from 'react';
-import { Card, Form, Input, Button, Typography, Space, Divider, message, Row, Col } from 'antd';
-import { UserOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
+import { Form, Input, Button, Card, message, Typography, Space } from 'antd';
+import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
+import { useAuth } from '../hooks/useAuth';
 
 const { Title, Text } = Typography;
 
-interface LoginForm {
-  email: string;
-  password: string;
-}
-
 const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [form] = Form.useForm();
+  const { login } = useAuth();
   const router = useRouter();
 
-  const handleLogin = async (values: LoginForm) => {
+  const onFinish = async (values: { email: string; password: string }) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock authentication - replace with actual API call
-      if (values.email === 'admin@jobplacement.com' && values.password === 'admin123') {
-        // Store token and user info
-        localStorage.setItem('token', 'mock-jwt-token');
-        localStorage.setItem('user', JSON.stringify({
-          id: '1',
-          full_name: 'Sari Wijaya',
-          email: 'admin@jobplacement.com',
-          role: 'hr_staff',
-          profile_picture: null,
-        }));
-        
-        message.success('Login berhasil!');
-        router.push('/dashboard');
-      } else {
-        message.error('Email atau password salah');
-      }
-    } catch (error) {
-      message.error('Terjadi kesalahan saat login');
+      await login(values.email, values.password);
+      message.success('Login successful!');
+      router.push('/dashboard');
+    } catch (error: any) {
+      message.error(error.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -49,102 +27,94 @@ const LoginPage: React.FC = () => {
   return (
     <div style={{
       minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '20px',
+      padding: '20px'
     }}>
-      <Row justify="center" style={{ width: '100%', maxWidth: 1200 }}>
-        <Col xs={24} sm={20} md={16} lg={12} xl={8}>
-          <Card
-            style={{
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-              borderRadius: '16px',
-              border: 'none',
-            }}
+      <Card
+        style={{
+          width: 400,
+          boxShadow: '0 15px 35px rgba(0, 0, 0, 0.1)',
+          borderRadius: 15,
+          border: 'none'
+        }}
+        bodyStyle={{ padding: '40px' }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <Title level={2} style={{ color: '#1890ff', marginBottom: 8 }}>
+            Welcome Back
+          </Title>
+          <Text type="secondary">Sign in to Job Placement System</Text>
+        </div>
+
+        <Form
+          name="login"
+          onFinish={onFinish}
+          layout="vertical"
+          size="large"
+        >
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: 'Please input your email!' },
+              { type: 'email', message: 'Please enter a valid email!' }
+            ]}
           >
-            <div style={{ textAlign: 'center', marginBottom: 32 }}>
-              <Title level={2} style={{ color: '#1890ff', marginBottom: 8 }}>
-                Job Placement System
-              </Title>
-              <Text type="secondary">
-                Masuk ke dashboard administrator
-              </Text>
-            </div>
+            <Input 
+              prefix={<UserOutlined />} 
+              placeholder="Enter your email"
+              style={{ borderRadius: 8 }}
+            />
+          </Form.Item>
 
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={handleLogin}
-              size="large"
+          <Form.Item
+            name="password"
+            label="Password"
+            rules={[
+              { required: true, message: 'Please input your password!' },
+              { min: 6, message: 'Password must be at least 6 characters!' }
+            ]}
+          >
+            <Input.Password 
+              prefix={<LockOutlined />} 
+              placeholder="Enter your password"
+              style={{ borderRadius: 8 }}
+            />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 16 }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+              icon={<LoginOutlined />}
+              style={{ 
+                borderRadius: 8, 
+                height: 45,
+                fontSize: 16,
+                fontWeight: 500
+              }}
             >
-              <Form.Item
-                name="email"
-                label="Email"
-                rules={[
-                  { required: true, message: 'Email wajib diisi' },
-                  { type: 'email', message: 'Format email tidak valid' }
-                ]}
-              >
-                <Input
-                  prefix={<UserOutlined />}
-                  placeholder="Masukkan email Anda"
-                />
-              </Form.Item>
+              Sign In
+            </Button>
+          </Form.Item>
+        </Form>
 
-              <Form.Item
-                name="password"
-                label="Password"
-                rules={[
-                  { required: true, message: 'Password wajib diisi' },
-                  { min: 6, message: 'Password minimal 6 karakter' }
-                ]}
-              >
-                <Input.Password
-                  prefix={<LockOutlined />}
-                  placeholder="Masukkan password Anda"
-                  iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
-                />
-              </Form.Item>
-
-              <Form.Item style={{ marginBottom: 16 }}>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={loading}
-                  style={{ width: '100%', height: 48 }}
-                >
-                  Masuk
-                </Button>
-              </Form.Item>
-            </Form>
-
-            <Divider>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                Demo Login
-              </Text>
-            </Divider>
-
-            <div style={{ textAlign: 'center' }}>
-              <Space direction="vertical" size="small">
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  Email: admin@jobplacement.com
-                </Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  Password: admin123
-                </Text>
-              </Space>
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: 24 }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                © 2024 Job Placement System. All rights reserved.
-              </Text>
-            </div>
-          </Card>
-        </Col>
-      </Row>
+        <div style={{ textAlign: 'center', marginTop: 24 }}>
+          <Space direction="vertical" size="small">
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Demo Credentials:
+            </Text>
+            <Text code style={{ fontSize: 11 }}>
+              admin@example.com / password123
+            </Text>
+          </Space>
+        </div>
+      </Card>
     </div>
   );
 };

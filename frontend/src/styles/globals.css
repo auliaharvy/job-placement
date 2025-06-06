@@ -1,4 +1,6 @@
-/* Global styles */
+/* globals.css */
+@import '~antd/dist/reset.css';
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -12,16 +14,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -29,16 +23,9 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-}
-
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -47,7 +34,7 @@ a {
 
 ::-webkit-scrollbar-thumb {
   background: #c1c1c1;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -55,113 +42,46 @@ a {
 }
 
 /* Ant Design customizations */
-.ant-layout-sider-collapsed .ant-menu-item-icon {
-  margin-right: 0;
+.ant-layout {
+  background: #f0f2f5;
 }
 
-.ant-menu-submenu-title:hover {
-  color: #1890ff !important;
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Loading states */
-.loading-container {
+.ant-btn {
+  border-radius: 6px;
+}
+
+.ant-input, .ant-input-password {
+  border-radius: 6px;
+}
+
+/* Loading spinner overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 400px;
+  justify-content: center;
+  z-index: 9999;
 }
 
-/* Responsive table */
-.ant-table-wrapper {
-  overflow-x: auto;
-}
-
-/* Card hover effects */
-.ant-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: box-shadow 0.3s ease;
-}
-
-/* Form spacing */
-.ant-form-item {
-  margin-bottom: 16px;
-}
-
-/* Badge positioning */
-.ant-badge-ribbon-wrapper {
-  margin-bottom: 8px;
-}
-
-/* Statistics card styling */
-.ant-statistic-title {
-  font-size: 14px;
-  color: rgba(0, 0, 0, 0.65);
-  margin-bottom: 4px;
-}
-
-.ant-statistic-content {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-/* Progress bar in cards */
-.ant-progress {
-  margin-top: 8px;
-}
-
-/* Alert spacing */
-.ant-alert {
-  margin-bottom: 8px;
-}
-
-/* Menu item spacing */
-.ant-menu-item,
-.ant-menu-submenu-title {
-  height: 40px;
-  line-height: 40px;
-}
-
-/* Avatar in list */
-.ant-list-item-meta-avatar {
-  align-self: flex-start;
-}
-
-/* Tag spacing */
-.ant-tag {
-  margin-bottom: 4px;
-}
-
-/* Mobile responsiveness */
+/* Responsive utilities */
 @media (max-width: 768px) {
-  .ant-layout-content {
-    margin: 16px;
-    padding: 16px;
-  }
-  
-  .ant-col {
-    margin-bottom: 16px;
-  }
-  
-  .ant-statistic-content {
-    font-size: 20px;
-  }
-  
-  .recharts-wrapper {
-    font-size: 12px;
+  .desktop-only {
+    display: none !important;
   }
 }
 
-@media (max-width: 576px) {
-  .ant-layout-content {
-    margin: 8px;
-    padding: 12px;
-  }
-  
-  .ant-card-head-title {
-    font-size: 14px;
-  }
-  
-  .ant-statistic-content {
-    font-size: 18px;
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
   }
 }
