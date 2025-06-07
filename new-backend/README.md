@@ -140,7 +140,7 @@ http://localhost:8000/api/v1
 - `PUT /applications/{id}/status` - Update application status
 
 #### WhatsApp
-- `POST /whatsapp/send-message` - Send WhatsApp message
+- `POST /whatsapp/send-text` - Send WhatsApp message
 - `GET /whatsapp/status` - Check gateway status
 - `POST /whatsapp/broadcast-job` - Broadcast job to matching candidates
 

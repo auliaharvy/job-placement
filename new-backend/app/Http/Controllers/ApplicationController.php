@@ -20,8 +20,8 @@ class ApplicationController extends Controller
     {
         $user = $request->user();
         $query = Application::with([
-            'applicant.user', 
-            'jobPosting.company', 
+            'applicant.user',
+            'jobPosting.company',
             'agent.user',
             'screener',
             'interviewer'
@@ -283,7 +283,7 @@ class ApplicationController extends Controller
 
         try {
             $success = $application->progressToNextStage();
-            
+
             if ($success) {
                 $application->refresh();
                 $application->load(['applicant.user', 'jobPosting.company']);
@@ -331,7 +331,7 @@ class ApplicationController extends Controller
 
         try {
             $success = $application->reject($request->reason, Auth::id());
-            
+
             if ($success) {
                 return response()->json([
                     'success' => true,
@@ -371,7 +371,7 @@ class ApplicationController extends Controller
 
         try {
             $success = $application->accept(Auth::id(), $request->notes);
-            
+
             if ($success) {
                 return response()->json([
                     'success' => true,
@@ -620,7 +620,7 @@ class ApplicationController extends Controller
                 'total_applications' => Application::count(),
                 'accepted' => Application::where('status', 'accepted')->count(),
                 'placed' => Application::where('status', 'placed')->count(),
-                'percentage' => Application::count() > 0 ? 
+                'percentage' => Application::count() > 0 ?
                     round((Application::where('status', 'placed')->count() / Application::count()) * 100, 2) : 0,
             ],
             'avg_processing_time' => Application::whereIn('status', ['accepted', 'rejected'])

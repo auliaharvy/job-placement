@@ -504,7 +504,7 @@ class WhatsAppService
                 // Check if our session is in the list
                 $sessionExists = false;
                 $sessionsList = [];
-                
+
                 // Handle different response structures
                 if (isset($responseData['success']) && $responseData['success'] && isset($responseData['data']['data'])) {
                     // Structure: {"success": true, "data": {"data": ["session1", "session2"]}}

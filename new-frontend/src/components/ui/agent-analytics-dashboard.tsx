@@ -91,7 +91,7 @@ export default function AgentAnalyticsDashboard({ agent }: AgentAnalyticsDashboa
           <div className="flex items-center">
             <div className="flex-1">
               <p className="text-sm font-medium text-blue-600">Total Clicks</p>
-              <p className="text-2xl font-bold text-blue-900">{analytics.totalClicks}</p>
+              <p className="text-2xl font-bold text-blue-900">{analytics.totals.total_clicks}</p>
             </div>
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
@@ -106,7 +106,7 @@ export default function AgentAnalyticsDashboard({ agent }: AgentAnalyticsDashboa
           <div className="flex items-center">
             <div className="flex-1">
               <p className="text-sm font-medium text-green-600">Unique Clicks</p>
-              <p className="text-2xl font-bold text-green-900">{analytics.uniqueClicks}</p>
+              <p className="text-2xl font-bold text-green-900">{analytics.totals.unique_clicks}</p>
             </div>
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -119,9 +119,9 @@ export default function AgentAnalyticsDashboard({ agent }: AgentAnalyticsDashboa
         <div className="bg-purple-50 p-4 rounded-lg">
           <div className="flex items-center">
             <div className="flex-1">
-              <p className="text-sm font-medium text-purple-600">Click Rate</p>
+              <p className="text-sm font-medium text-purple-600">Conversion Rate</p>
               <p className="text-2xl font-bold text-purple-900">
-                {analytics.totalClicks > 0 ? ((analytics.uniqueClicks / analytics.totalClicks) * 100).toFixed(1) : '0'}%
+                {analytics.totals.conversion_rate}%
               </p>
             </div>
             <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -136,9 +136,9 @@ export default function AgentAnalyticsDashboard({ agent }: AgentAnalyticsDashboa
         <div className="bg-yellow-50 p-4 rounded-lg">
           <div className="flex items-center">
             <div className="flex-1">
-              <p className="text-sm font-medium text-yellow-600">Conversion</p>
+              <p className="text-sm font-medium text-yellow-600">Conversions</p>
               <p className="text-2xl font-bold text-yellow-900">
-                {analytics.conversionRate ? `${analytics.conversionRate}%` : 'N/A'}
+                {analytics.totals.converted_clicks}
               </p>
             </div>
             <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -155,13 +155,13 @@ export default function AgentAnalyticsDashboard({ agent }: AgentAnalyticsDashboa
         <div>
           <h4 className="text-md font-medium text-gray-900 mb-3">Traffic Sources</h4>
           <div className="space-y-2">
-            {Object.entries(analytics.clicksBySource).map(([source, count]) => (
+            {Object.entries(analytics.sources).map(([source, count]) => (
               <div key={source} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                 <span className="text-sm text-gray-600 capitalize">{source}</span>
                 <span className="text-sm font-medium text-gray-900">{count} clicks</span>
               </div>
             ))}
-            {Object.keys(analytics.clicksBySource).length === 0 && (
+            {Object.keys(analytics.sources).length === 0 && (
               <p className="text-sm text-gray-500 italic">No source data available</p>
             )}
           </div>
@@ -171,13 +171,13 @@ export default function AgentAnalyticsDashboard({ agent }: AgentAnalyticsDashboa
         <div>
           <h4 className="text-md font-medium text-gray-900 mb-3">Traffic Medium</h4>
           <div className="space-y-2">
-            {Object.entries(analytics.clicksByMedium).map(([medium, count]) => (
+            {Object.entries(analytics.mediums).map(([medium, count]) => (
               <div key={medium} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                 <span className="text-sm text-gray-600 capitalize">{medium}</span>
                 <span className="text-sm font-medium text-gray-900">{count} clicks</span>
               </div>
             ))}
-            {Object.keys(analytics.clicksByMedium).length === 0 && (
+            {Object.keys(analytics.mediums).length === 0 && (
               <p className="text-sm text-gray-500 italic">No medium data available</p>
             )}
           </div>
@@ -187,13 +187,13 @@ export default function AgentAnalyticsDashboard({ agent }: AgentAnalyticsDashboa
         <div>
           <h4 className="text-md font-medium text-gray-900 mb-3">Campaigns</h4>
           <div className="space-y-2">
-            {Object.entries(analytics.clicksByCampaign).map(([campaign, count]) => (
+            {Object.entries(analytics.campaigns).map(([campaign, count]) => (
               <div key={campaign} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                 <span className="text-sm text-gray-600">{campaign}</span>
                 <span className="text-sm font-medium text-gray-900">{count} clicks</span>
               </div>
             ))}
-            {Object.keys(analytics.clicksByCampaign).length === 0 && (
+            {Object.keys(analytics.campaigns).length === 0 && (
               <p className="text-sm text-gray-500 italic">No campaign data available</p>
             )}
           </div>
@@ -203,7 +203,7 @@ export default function AgentAnalyticsDashboard({ agent }: AgentAnalyticsDashboa
         <div>
           <h4 className="text-md font-medium text-gray-900 mb-3">Daily Clicks</h4>
           <div className="space-y-2 max-h-40 overflow-y-auto">
-            {Object.entries(analytics.clicksByDate)
+            {Object.entries(analytics.daily_clicks)
               .sort(([a], [b]) => b.localeCompare(a))
               .map(([date, count]) => (
                 <div key={date} className="flex items-center justify-between p-2 bg-gray-50 rounded">
@@ -211,7 +211,7 @@ export default function AgentAnalyticsDashboard({ agent }: AgentAnalyticsDashboa
                   <span className="text-sm font-medium text-gray-900">{count} clicks</span>
                 </div>
               ))}
-            {Object.keys(analytics.clicksByDate).length === 0 && (
+            {Object.keys(analytics.daily_clicks).length === 0 && (
               <p className="text-sm text-gray-500 italic">No daily data available</p>
             )}
           </div>
@@ -224,7 +224,7 @@ export default function AgentAnalyticsDashboard({ agent }: AgentAnalyticsDashboa
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <p className="text-blue-600 font-medium">Agent Success Rate</p>
-            <p className="text-blue-900">{agent.success_rate}</p>
+            <p className="text-blue-900">{agent.success_rate}%</p>
           </div>
           <div>
             <p className="text-blue-600 font-medium">Total Placements</p>
@@ -232,16 +232,46 @@ export default function AgentAnalyticsDashboard({ agent }: AgentAnalyticsDashboa
           </div>
           <div>
             <p className="text-blue-600 font-medium">Link Clicks</p>
-            <p className="text-blue-900">{analytics.totalClicks}</p>
+            <p className="text-blue-900">{analytics.totals.total_clicks}</p>
           </div>
           <div>
             <p className="text-blue-600 font-medium">Click-to-Placement</p>
             <p className="text-blue-900">
-              {analytics.totalClicks > 0 ? ((agent.successful_placements / analytics.totalClicks) * 100).toFixed(1) : '0'}%
+              {analytics.conversion_funnel ? analytics.conversion_funnel.click_to_placement_rate : '0'}%
             </p>
           </div>
         </div>
       </div>
+
+      {/* Conversion Funnel */}
+      {analytics.conversion_funnel && (
+        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
+          <h4 className="text-md font-medium text-green-900 mb-2">Conversion Funnel</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className="text-green-600 font-medium">Clicks → Conversions</p>
+              <p className="text-green-900">{analytics.conversion_funnel.click_to_conversion_rate}%</p>
+              <p className="text-xs text-green-700">
+                {analytics.conversion_funnel.clicks} clicks → {analytics.conversion_funnel.conversions} conversions
+              </p>
+            </div>
+            <div>
+              <p className="text-green-600 font-medium">Conversions → Placements</p>
+              <p className="text-green-900">{analytics.conversion_funnel.conversion_to_placement_rate}%</p>
+              <p className="text-xs text-green-700">
+                {analytics.conversion_funnel.conversions} conversions → {analytics.conversion_funnel.placements} placements
+              </p>
+            </div>
+            <div>
+              <p className="text-green-600 font-medium">Overall Rate</p>
+              <p className="text-green-900">{analytics.conversion_funnel.click_to_placement_rate}%</p>
+              <p className="text-xs text-green-700">
+                {analytics.conversion_funnel.clicks} clicks → {analytics.conversion_funnel.placements} placements
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

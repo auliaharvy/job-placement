@@ -227,6 +227,212 @@ class Applicant extends Model
     }
 
     /**
+     * Check if applicant matches job requirements
+     */
+    public function matchesJobRequirements(JobPosting $job): array
+    {
+        $score = 0;
+        $maxScore = 0;
+        $details = [];
+        $matches = true;
+
+        // Check education level requirement (20 points)
+        $maxScore += 20;
+        if (!empty($job->required_education_levels)) {
+            if (in_array($this->education_level, $job->required_education_levels)) {
+                $score += 20;
+                $details['education'] = ['match' => true, 'message' => 'Education level matches'];
+            } else {
+                $matches = false;
+                $details['education'] = ['match' => false, 'message' => 'Education level does not match requirements'];
+            }
+        } else {
+            $score += 20;
+            $details['education'] = ['match' => true, 'message' => 'No specific education requirement'];
+        }
+
+        // Check minimum experience requirement (25 points)
+        $maxScore += 25;
+        if ($job->min_experience_months > 0) {
+            $applicantExp = $this->total_work_experience_months ?? 0;
+            if ($applicantExp >= $job->min_experience_months) {
+                $score += 25;
+                $details['experience'] = ['match' => true, 'message' => "Has {$applicantExp} months experience (required: {$job->min_experience_months})"];
+            } else {
+                $matches = false;
+                $score += max(0, ($applicantExp / $job->min_experience_months) * 25);
+                $details['experience'] = ['match' => false, 'message' => "Has {$applicantExp} months experience, but {$job->min_experience_months} months required"];
+            }
+        } else {
+            $score += 25;
+            $details['experience'] = ['match' => true, 'message' => 'No experience requirement'];
+        }
+
+        // Check work location preference (15 points)
+        $maxScore += 15;
+        if (!empty($this->preferred_locations) && !empty($job->work_city)) {
+            $hasLocationMatch = false;
+            foreach ($this->preferred_locations as $location) {
+                if (stripos($location, $job->work_city) !== false ||
+                    stripos($job->work_city, $location) !== false) {
+                    $hasLocationMatch = true;
+                    break;
+                }
+            }
+            if ($hasLocationMatch) {
+                $score += 15;
+                $details['location'] = ['match' => true, 'message' => 'Location preference matches'];
+            } else {
+                $matches = false;
+                $details['location'] = ['match' => false, 'message' => 'Location preference does not match'];
+            }
+        } else {
+            $score += 15;
+            $details['location'] = ['match' => true, 'message' => 'No location preference specified'];
+        }
+
+        // Check skills match (30 points)
+        $maxScore += 30;
+        if (!empty($job->required_skills) && !empty($this->skills)) {
+            $matchedSkills = [];
+            foreach ($job->required_skills as $requiredSkill) {
+                foreach ($this->skills as $applicantSkill) {
+                    if (stripos($applicantSkill, $requiredSkill) !== false ||
+                        stripos($requiredSkill, $applicantSkill) !== false) {
+                        $matchedSkills[] = $requiredSkill;
+                        break;
+                    }
+                }
+            }
+
+            if (!empty($matchedSkills)) {
+                $skillScore = (count($matchedSkills) / count($job->required_skills)) * 30;
+                $score += $skillScore;
+                $details['skills'] = [
+                    'match' => count($matchedSkills) === count($job->required_skills),
+                    'message' => 'Matched skills: ' . implode(', ', $matchedSkills),
+                    'matched_count' => count($matchedSkills),
+                    'required_count' => count($job->required_skills)
+                ];
+
+                if (count($matchedSkills) < count($job->required_skills)) {
+                    $matches = false;
+                }
+            } else {
+                $matches = false;
+                $details['skills'] = ['match' => false, 'message' => 'No matching skills found'];
+            }
+        } else {
+            $score += 30;
+            $details['skills'] = ['match' => true, 'message' => 'No specific skills required'];
+        }
+
+        // Check salary expectation (10 points)
+        $maxScore += 10;
+        if ($this->expected_salary_min && $job->salary_max) {
+            if ($this->expected_salary_min <= $job->salary_max) {
+                $score += 10;
+                $details['salary'] = ['match' => true, 'message' => 'Salary expectation is within range'];
+            } else {
+                $matches = false;
+                $details['salary'] = ['match' => false, 'message' => 'Salary expectation exceeds maximum offer'];
+            }
+        } else {
+            $score += 10;
+            $details['salary'] = ['match' => true, 'message' => 'No salary expectation specified'];
+        }
+
+        // Check availability status
+        if (!$this->isAvailable()) {
+            $matches = false;
+            $details['availability'] = ['match' => false, 'message' => 'Applicant is not currently available'];
+        } else {
+            $details['availability'] = ['match' => true, 'message' => 'Applicant is available'];
+        }
+
+        $finalScore = min(100, round(($score / $maxScore) * 100));
+
+        return [
+            'matches' => $matches,
+            'score' => $finalScore,
+            'details' => $details
+        ];
+    }
+
+    /**
+     * Get matching score for a job (0-100)
+     */
+    public function getJobMatchingScore(JobPosting $job): int
+    {
+        $score = 0;
+        $maxScore = 0;
+
+        // Education match (20 points)
+        $maxScore += 20;
+        if (!empty($job->required_education_levels) && in_array($this->education_level, $job->required_education_levels)) {
+            $score += 20;
+        }
+
+        // Experience match (25 points)
+        $maxScore += 25;
+        if ($job->min_experience_months > 0) {
+            $applicantExp = $this->total_work_experience_months ?? 0;
+            if ($applicantExp >= $job->min_experience_months) {
+                $score += 25;
+            } else {
+                // Partial score for partial experience
+                $score += max(0, ($applicantExp / $job->min_experience_months) * 25);
+            }
+        } else {
+            $score += 25; // No experience required
+        }
+
+        // Skills match (30 points)
+        $maxScore += 30;
+        if (!empty($job->required_skills) && !empty($this->skills)) {
+            $matchedSkills = 0;
+            foreach ($job->required_skills as $requiredSkill) {
+                foreach ($this->skills as $applicantSkill) {
+                    if (stripos($applicantSkill, $requiredSkill) !== false ||
+                        stripos($requiredSkill, $applicantSkill) !== false) {
+                        $matchedSkills++;
+                        break;
+                    }
+                }
+            }
+            $score += ($matchedSkills / count($job->required_skills)) * 30;
+        } else {
+            $score += 30; // No specific skills required
+        }
+
+        // Location match (15 points)
+        $maxScore += 15;
+        if (!empty($this->preferred_locations) && !empty($job->work_city)) {
+            foreach ($this->preferred_locations as $location) {
+                if (stripos($location, $job->work_city) !== false ||
+                    stripos($job->work_city, $location) !== false) {
+                    $score += 15;
+                    break;
+                }
+            }
+        } else {
+            $score += 15; // No location preference
+        }
+
+        // Salary match (10 points)
+        $maxScore += 10;
+        if ($this->expected_salary_min && $job->salary_max) {
+            if ($this->expected_salary_min <= $job->salary_max) {
+                $score += 10;
+            }
+        } else {
+            $score += 10; // No salary expectation or job salary
+        }
+
+        return min(100, round(($score / $maxScore) * 100));
+    }
+
+    /**
      * Fixed search scope for PostgreSQL compatibility
      */
     public function scopeSearch($query, $search)

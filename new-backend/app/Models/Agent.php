@@ -108,6 +108,14 @@ class Agent extends Model
     }
 
     /**
+     * Get all link clicks for this agent
+     */
+    public function linkClicks(): HasMany
+    {
+        return $this->hasMany(AgentLinkClick::class);
+    }
+
+    /**
      * Accessors
      */
 
@@ -116,10 +124,10 @@ class Agent extends Model
      */
     public function getFullNameAttribute(): string
     {
-        if ($this->user && $this->user->name) {
-            return $this->user->name;
+        if ($this->user && $this->user->first_name && $this->user->last_name) {
+            return $this->user->first_name. ' '. $this->user->last_name;
         }
-        
+
         return $this->agent_code ?? 'Unknown Agent';
     }
 
@@ -145,7 +153,7 @@ class Agent extends Model
     public static function generateAgentCode(): string
     {
         $lastAgent = self::orderBy('agent_code', 'desc')->first();
-        
+
         if ($lastAgent && preg_match('/AGT(\d+)/', $lastAgent->agent_code, $matches)) {
             $lastNumber = (int) $matches[1];
             $newNumber = $lastNumber + 1;
@@ -163,7 +171,7 @@ class Agent extends Model
     {
         $baseName = strtoupper(substr($firstName, 0, 4));
         $counter = 1;
-        
+
         do {
             $code = $baseName . str_pad($counter, 3, '0', STR_PAD_LEFT);
             $exists = self::where('referral_code', $code)->exists();
@@ -180,7 +188,7 @@ class Agent extends Model
     {
         $this->total_referrals = $this->applicants()->count();
         $this->successful_placements = $this->placements()->where('status', 'active')->count();
-        
+
         // Calculate success rate
         if ($this->total_referrals > 0) {
             $this->success_rate = ($this->successful_placements / $this->total_referrals) * 100;
@@ -213,7 +221,7 @@ class Agent extends Model
     public function addPoints(int $points, string $reason = null): void
     {
         $this->increment('total_points', $points);
-        
+
         // Update level if threshold is reached
         $newLevel = $this->calculateLevel();
         if ($newLevel !== $this->level) {
@@ -245,10 +253,10 @@ class Agent extends Model
     public function addCommission(float $amount, int $placementId): void
     {
         $this->increment('total_commission', $amount);
-        
+
         // Add points for successful placement
         $this->addPoints(100, "Successful placement #{$placementId}");
-        
+
         // Update performance metrics
         $metrics = $this->performance_metrics ?? [];
         $metrics['commission_history'][] = [
@@ -332,7 +340,7 @@ class Agent extends Model
     public function scopeSearch($query, $search)
     {
         return $query->whereHas('user', function ($userQuery) use ($search) {
-            $userQuery->where('name', 'like', "%{$search}%")
+            $userQuery->where('first_name', 'like', "%{$search}%")
                      ->orWhere('email', 'like', "%{$search}%");
         })->orWhere('agent_code', 'like', "%{$search}%")
           ->orWhere('referral_code', 'like', "%{$search}%");

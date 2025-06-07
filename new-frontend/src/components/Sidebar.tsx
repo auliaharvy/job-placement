@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { 
   Home, 
   Users, 
@@ -9,25 +10,38 @@ import {
   MessageSquare, 
   BarChart3,
   Menu,
-  X
+  X,
+  UserCheck,
+  Settings
 } from 'lucide-react';
 
 interface SidebarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  className?: string;
 }
 
 const menuItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home },
-  { id: 'applicants', label: 'Applicants', icon: Users },
-  { id: 'companies', label: 'Companies', icon: Building2 },
-  { id: 'jobs', label: 'Job Postings', icon: FileText },
-  { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
-  { id: 'reports', label: 'Reports', icon: BarChart3 },
+  { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard' },
+  { id: 'applicants', label: 'Applicants', icon: Users, href: '/applicants' },
+  { id: 'companies', label: 'Companies', icon: Building2, href: '/companies' },
+  { id: 'jobs', label: 'Job Postings', icon: FileText, href: '/jobs' },
+  { id: 'agent-management', label: 'Agent Management', icon: UserCheck, href: '/agent-management' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, href: '/whatsapp' },
+  { id: 'reports', label: 'Reports', icon: BarChart3, href: '/reports' },
 ];
 
-export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+export default function Sidebar({ className }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleNavigation = (href: string) => {
+    router.push(href);
+    setIsOpen(false);
+  };
+
+  const isActiveRoute = (href: string) => {
+    return pathname === href || pathname.startsWith(href + '/');
+  };
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -53,15 +67,12 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       <nav className="flex-1 p-4 space-y-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeTab === item.id;
+          const isActive = isActiveRoute(item.href);
           
           return (
             <button
               key={item.id}
-              onClick={() => {
-                onTabChange(item.id);
-                setIsOpen(false);
-              }}
+              onClick={() => handleNavigation(item.href)}
               className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive
                   ? 'bg-blue-50 text-blue-700 border border-blue-200'
@@ -74,6 +85,17 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           );
         })}
       </nav>
+
+      {/* User Section */}
+      <div className="p-4 border-t border-gray-200">
+        <button
+          onClick={() => handleNavigation('/profile')}
+          className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+        >
+          <Settings className="h-5 w-5" />
+          <span className="hidden lg:block">Settings</span>
+        </button>
+      </div>
     </div>
   );
 
@@ -96,15 +118,15 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       )}
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
-        <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
+      <div className={`hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 ${className || ''}`}>
+        <div className="flex flex-col flex-grow bg-white border-r border-gray-200 shadow-sm">
           <SidebarContent />
         </div>
       </div>
 
       {/* Mobile Sidebar */}
       <div
-        className={`lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-white transform transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

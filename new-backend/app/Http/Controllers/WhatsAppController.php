@@ -23,7 +23,7 @@ class WhatsAppController extends Controller
     {
         try {
             $status = $this->whatsAppService->checkGatewayStatus();
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $status,
@@ -43,7 +43,7 @@ class WhatsAppController extends Controller
     {
         try {
             $result = $this->whatsAppService->startSession();
-            
+
             return response()->json([
                 'success' => $result['status'] === 'success',
                 'message' => $result['message'],
@@ -64,7 +64,7 @@ class WhatsAppController extends Controller
     {
         try {
             $result = $this->whatsAppService->stopSession();
-            
+
             return response()->json([
                 'success' => $result['status'] === 'success',
                 'message' => $result['message'],
@@ -99,7 +99,7 @@ class WhatsAppController extends Controller
         try {
             // First check if session is active
             $status = $this->whatsAppService->checkGatewayStatus();
-            
+
             if ($status['status'] !== 'connected') {
                 return response()->json([
                     'success' => false,
@@ -111,13 +111,13 @@ class WhatsAppController extends Controller
             // Create a test applicant object for the method
             $testApplicant = new \stdClass();
             $testApplicant->phone = $request->phone;
-            
+
             $success = $this->whatsAppService->sendMessage(
-                $request->phone, 
-                $request->message, 
+                $request->phone,
+                $request->message,
                 'test_message'
             );
-            
+
             return response()->json([
                 'success' => $success,
                 'message' => $success ? 'Test message sent successfully' : 'Failed to send test message',
@@ -159,7 +159,7 @@ class WhatsAppController extends Controller
                 $request->image_url,
                 $request->caption ?? ''
             );
-            
+
             return response()->json([
                 'success' => $success,
                 'message' => $success ? 'Test image sent successfully' : 'Failed to send test image',
@@ -204,7 +204,7 @@ class WhatsAppController extends Controller
                 $request->document_name,
                 $request->caption ?? ''
             );
-            
+
             return response()->json([
                 'success' => $success,
                 'message' => $success ? 'Test document sent successfully' : 'Failed to send test document',
@@ -231,9 +231,9 @@ class WhatsAppController extends Controller
         try {
             $startDate = $request->start_date ? \Carbon\Carbon::parse($request->start_date) : null;
             $endDate = $request->end_date ? \Carbon\Carbon::parse($request->end_date) : null;
-            
+
             $stats = $this->whatsAppService->getMessageStats($startDate, $endDate);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $stats,
@@ -350,8 +350,8 @@ class WhatsAppController extends Controller
             if ($request->has('test_image_url')) {
                 sleep(2);
                 $imageSuccess = $this->whatsAppService->sendImage(
-                    $testPhone, 
-                    $request->test_image_url, 
+                    $testPhone,
+                    $request->test_image_url,
                     'Test image dari sistem Job Placement'
                 );
                 $workflow['step_4_image_test'] = [

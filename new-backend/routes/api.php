@@ -7,6 +7,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ApplicantController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\AgentController;
+use App\Http\Controllers\AgentAnalyticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +36,18 @@ Route::prefix('v1')->group(function () {
 
     // QR Code generation for registration
     Route::post('qr-code/generate', [ApplicantController::class, 'generateQRCode']);
+
+    // Public agent endpoints (for link functionality)
+    Route::prefix('agents')->group(function () {
+        Route::get('/', [AgentController::class, 'index']); // Public access for form dropdowns
+        Route::get('referral/{referralCode}', [AgentController::class, 'getByReferralCode']); // Public access for referral links
+    });
+
+    // Public analytics endpoints (for tracking)
+    Route::prefix('analytics')->group(function () {
+        Route::post('track-click', [AgentAnalyticsController::class, 'trackClick']); // Public access for link tracking
+        Route::post('mark-conversion', [AgentAnalyticsController::class, 'markConversionBySession']); // Public access for conversion tracking
+    });
 });
 
 // Protected routes (authentication required)
@@ -132,10 +146,9 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
     // Agent routes
     Route::prefix('agents')->group(function () {
-        Route::get('/', [AgentController::class, 'index'])->middleware('role:super_admin,direktur,hr_staff');
-        Route::post('/', [AgentController::class, 'store'])->middleware('role:super_admin,direktur,hr_staff');
         Route::get('statistics', [AgentController::class, 'statistics'])->middleware('role:super_admin,direktur,hr_staff');
         Route::get('leaderboard', [AgentController::class, 'leaderboard'])->middleware('role:super_admin,direktur,hr_staff');
+        Route::post('/', [AgentController::class, 'store'])->middleware('role:super_admin,direktur,hr_staff');
 
         Route::get('{agent}', [AgentController::class, 'show']);
         Route::put('{agent}', [AgentController::class, 'update'])->middleware('role:super_admin,direktur,hr_staff');
@@ -145,6 +158,14 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('{agent}/qr-code', [AgentController::class, 'getQRCode']);
         Route::get('{agent}/performance', [AgentController::class, 'getPerformance']);
         Route::post('{agent}/add-points', [AgentController::class, 'addPoints'])->middleware('role:super_admin,direktur,hr_staff');
+    });
+
+    // Agent Analytics routes (protected)
+    Route::prefix('analytics')->group(function () {
+        Route::get('agents', [AgentAnalyticsController::class, 'getAllAgentsAnalytics'])->middleware('role:super_admin,direktur,hr_staff');
+        Route::get('agents/{agentId}', [AgentAnalyticsController::class, 'getAgentAnalytics'])->middleware('role:super_admin,direktur,hr_staff');
+        Route::get('dashboard', [AgentAnalyticsController::class, 'getDashboardSummary'])->middleware('role:super_admin,direktur,hr_staff');
+        Route::post('clicks/{clickId}/convert', [AgentAnalyticsController::class, 'markConversion'])->middleware('role:super_admin,direktur,hr_staff');
     });
 
     // WhatsApp routes

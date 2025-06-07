@@ -1,10 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
+import DashboardLayout from '@/components/DashboardLayout';
 import { 
   Users, 
   Building2, 
@@ -299,52 +296,12 @@ const DefaultDashboard = ({ user }: { user: any }) => (
   </div>
 );
 
-// Placeholder components for other sections
-const PlaceholderContent = ({ title, description }: { title: string; description: string }) => (
-  <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm text-center">
-    <div className="max-w-md mx-auto">
-      <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-500 text-sm">{description}</p>
-    </div>
-  </div>
-);
-
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      console.log('Not authenticated, redirecting to login');
-      router.push('/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  useEffect(() => {
-    // Debug user data
-    console.log('Dashboard - Current user:', user);
-    console.log('Dashboard - Is authenticated:', isAuthenticated);
-    console.log('Dashboard - Is loading:', isLoading);
-  }, [user, isAuthenticated, isLoading]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !user) {
-    return null; // Will redirect to login
-  }
+  const { user } = useAuth();
 
   const renderDashboardContent = () => {
+    if (!user) return <DefaultDashboard user={{}} />;
+    
     switch (user.role) {
       case 'super_admin':
       case 'admin':
@@ -360,59 +317,9 @@ export default function DashboardPage() {
     }
   };
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return renderDashboardContent();
-      case 'applicants':
-        return (
-          <PlaceholderContent
-            title="Applicants Management"
-            description="Manage job applicants, view profiles, and track application status. This feature will be implemented soon."
-          />
-        );
-      case 'companies':
-        return (
-          <PlaceholderContent
-            title="Companies Management"
-            description="Manage partner companies, add new employers, and track company information. This feature will be implemented soon."
-          />
-        );
-      case 'jobs':
-        return (
-          <PlaceholderContent
-            title="Job Postings"
-            description="Create and manage job postings, set requirements, and track applications. This feature will be implemented soon."
-          />
-        );
-      case 'whatsapp':
-        return (
-          <PlaceholderContent
-            title="WhatsApp Management"
-            description="Manage WhatsApp integrations, send notifications, and track message delivery. This feature will be implemented soon."
-          />
-        );
-      case 'reports':
-        return (
-          <PlaceholderContent
-            title="Reports & Analytics"
-            description="View detailed reports, analytics, and performance metrics. This feature will be implemented soon."
-          />
-        );
-      default:
-        return renderDashboardContent();
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="lg:ml-64">
-        <Header />
-        <main className="p-6">
-          {renderContent()}
-        </main>
-      </div>
-    </div>
+    <DashboardLayout>
+      {renderDashboardContent()}
+    </DashboardLayout>
   );
 }

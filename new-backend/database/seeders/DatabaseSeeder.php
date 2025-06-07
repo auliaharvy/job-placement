@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             AgentSeeder::class,
             ApplicantSeeder::class,
             JobPostingSeeder::class,
+            AgentLinkClickSeeder::class,
         ]);
     }
 }

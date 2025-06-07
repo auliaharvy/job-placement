@@ -1,0 +1,963 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "Job Placement System - Agent Analytics API",
+		"description": "Complete API collection for Agent Link Management and Analytics System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345"
+	},
+	"item": [
+		{
+			"name": "🚀 Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.token) {",
+									"        pm.environment.set('auth_token', response.data.token);",
+									"        console.log('Token saved:', response.data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@jobplacement.com\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login to get authentication token"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👥 Agents (Public)",
+			"item": [
+				{
+					"name": "Get All Agents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/agents?paginate=false",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"agents"
+							],
+							"query": [
+								{
+									"key": "paginate",
+									"value": "false",
+									"description": "Disable pagination for dropdown usage"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Search by name, email, or code",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "active",
+									"description": "Filter by status",
+									"disabled": true
+								},
+								{
+									"key": "level",
+									"value": "",
+									"description": "Filter by level (bronze, silver, gold, platinum)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all agents - public endpoint for form dropdowns"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Agents (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/agents?per_page=10&page=1&sort_by=created_at&sort_direction=desc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"agents"
+							],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "10"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "sort_by",
+									"value": "created_at",
+									"description": "Sort by: created_at, agent_code, success_rate, successful_placements, total_points, total_commission"
+								},
+								{
+									"key": "sort_direction",
+									"value": "desc"
+								}
+							]
+						},
+						"description": "Get agents with pagination and sorting"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Agent by Referral Code",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/agents/referral/{{referral_code}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"agents",
+								"referral",
+								"{{referral_code}}"
+							]
+						},
+						"description": "Get agent by referral code - public endpoint for link functionality"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Agent by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/agents/{{agent_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"agents",
+								"{{agent_id}}"
+							]
+						},
+						"description": "Get specific agent by ID"
+					},
+					"response": []
+				}
+			],
+			"description": "Public agent endpoints (no authentication required)"
+		},
+		{
+			"name": "📊 Analytics (Public)",
+			"item": [
+				{
+					"name": "Track Link Click",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"agent_id\": \"1\",\n    \"referral_code\": \"JOHN001\",\n    \"utm_source\": \"facebook\",\n    \"utm_medium\": \"social\",\n    \"utm_campaign\": \"june_recruitment\",\n    \"session_id\": \"sess_123456789\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/analytics/track-click",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analytics",
+								"track-click"
+							]
+						},
+						"description": "Track agent link click - public endpoint"
+					},
+					"response": []
+				},
+				{
+					"name": "Track Click (Agent ID Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"agent_id\": \"1\",\n    \"utm_source\": \"whatsapp\",\n    \"utm_medium\": \"referral\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/analytics/track-click",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analytics",
+								"track-click"
+							]
+						},
+						"description": "Track click with minimal data"
+					},
+					"response": []
+				},
+				{
+					"name": "Track Click (Referral Code Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"referral_code\": \"JANE002\",\n    \"utm_source\": \"email\",\n    \"utm_medium\": \"newsletter\",\n    \"utm_campaign\": \"monthly_jobs\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/analytics/track-click",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analytics",
+								"track-click"
+							]
+						},
+						"description": "Track click using referral code"
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Conversion",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"session_id\": \"sess_123456789\",\n    \"agent_id\": \"1\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/analytics/mark-conversion",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analytics",
+								"mark-conversion"
+							]
+						},
+						"description": "Mark conversion for a session - public endpoint"
+					},
+					"response": []
+				}
+			],
+			"description": "Public analytics endpoints for tracking (no authentication required)"
+		},
+		{
+			"name": "📈 Analytics (Protected)",
+			"item": [
+				{
+					"name": "Get Agent Analytics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/analytics/agents/{{agent_id}}?start_date=2025-05-01&end_date=2025-06-01",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analytics",
+								"agents",
+								"{{agent_id}}"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2025-05-01",
+									"description": "Start date (YYYY-MM-DD)"
+								},
+								{
+									"key": "end_date",
+									"value": "2025-06-01",
+									"description": "End date (YYYY-MM-DD)"
+								},
+								{
+									"key": "utm_source",
+									"value": "",
+									"description": "Filter by UTM source",
+									"disabled": true
+								},
+								{
+									"key": "utm_medium",
+									"value": "",
+									"description": "Filter by UTM medium",
+									"disabled": true
+								},
+								{
+									"key": "utm_campaign",
+									"value": "",
+									"description": "Filter by UTM campaign",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get comprehensive analytics for specific agent"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Agent Analytics (Last 7 Days)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/analytics/agents/{{agent_id}}?start_date={{start_date_7_days_ago}}&end_date={{current_date}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analytics",
+								"agents",
+								"{{agent_id}}"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "{{start_date_7_days_ago}}"
+								},
+								{
+									"key": "end_date",
+									"value": "{{current_date}}"
+								}
+							]
+						},
+						"description": "Get agent analytics for last 7 days"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Agent Analytics (Facebook Only)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/analytics/agents/{{agent_id}}?utm_source=facebook",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analytics",
+								"agents",
+								"{{agent_id}}"
+							],
+							"query": [
+								{
+									"key": "utm_source",
+									"value": "facebook"
+								}
+							]
+						},
+						"description": "Get agent analytics filtered by Facebook traffic only"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Agents Analytics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/analytics/agents?start_date=2025-05-01&end_date=2025-06-01",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analytics",
+								"agents"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2025-05-01"
+								},
+								{
+									"key": "end_date",
+									"value": "2025-06-01"
+								}
+							]
+						},
+						"description": "Get analytics for all agents"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/analytics/dashboard?period=month",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analytics",
+								"dashboard"
+							],
+							"query": [
+								{
+									"key": "period",
+									"value": "month",
+									"description": "Period: today, week, month, quarter, year"
+								}
+							]
+						},
+						"description": "Get dashboard summary for specified period"
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Conversion by Click ID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/analytics/clicks/{{click_id}}/convert",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analytics",
+								"clicks",
+								"{{click_id}}",
+								"convert"
+							]
+						},
+						"description": "Mark specific click as converted (admin function)"
+					},
+					"response": []
+				}
+			],
+			"description": "Protected analytics endpoints (authentication required)"
+		},
+		{
+			"name": "🧪 Testing Scenarios",
+			"item": [
+				{
+					"name": "Test Complete Flow",
+					"item": [
+						{
+							"name": "1. Get Agent by Referral",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    const response = pm.response.json();",
+											"    if (response.success && response.data) {",
+											"        pm.environment.set('test_agent_id', response.data.id);",
+											"        pm.environment.set('test_referral_code', response.data.referral_code);",
+											"        console.log('Agent found:', response.data.user.full_name);",
+											"    }",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/agents/referral/JOHN001",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"agents",
+										"referral",
+										"JOHN001"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Track Link Click",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// Generate unique session ID",
+											"const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);",
+											"pm.environment.set('test_session_id', sessionId);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Click tracked successfully', function () {",
+											"    pm.response.to.have.status(201);",
+											"    const response = pm.response.json();",
+											"    pm.expect(response.success).to.be.true;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"agent_id\": \"{{test_agent_id}}\",\n    \"referral_code\": \"{{test_referral_code}}\",\n    \"utm_source\": \"postman_test\",\n    \"utm_medium\": \"api_test\",\n    \"utm_campaign\": \"integration_test\",\n    \"session_id\": \"{{test_session_id}}\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/analytics/track-click",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"analytics",
+										"track-click"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Mark Conversion",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Conversion marked successfully', function () {",
+											"    pm.response.to.have.status(200);",
+											"    const response = pm.response.json();",
+											"    pm.expect(response.success).to.be.true;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"session_id\": \"{{test_session_id}}\",\n    \"agent_id\": \"{{test_agent_id}}\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/analytics/mark-conversion",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"analytics",
+										"mark-conversion"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. Get Agent Analytics",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Analytics retrieved successfully', function () {",
+											"    pm.response.to.have.status(200);",
+											"    const response = pm.response.json();",
+											"    pm.expect(response.success).to.be.true;",
+											"    pm.expect(response.data).to.have.property('agent');",
+											"    pm.expect(response.data).to.have.property('totals');",
+											"    pm.expect(response.data.totals.total_clicks).to.be.above(0);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/analytics/agents/{{test_agent_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"analytics",
+										"agents",
+										"{{test_agent_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Complete flow: Get Agent → Track Click → Mark Conversion → Get Analytics"
+				},
+				{
+					"name": "Bulk Click Testing",
+					"item": [
+						{
+							"name": "Track Multiple Clicks - Facebook",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"agent_id\": \"1\",\n    \"utm_source\": \"facebook\",\n    \"utm_medium\": \"social\",\n    \"utm_campaign\": \"bulk_test_facebook\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/analytics/track-click",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"analytics",
+										"track-click"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Track Multiple Clicks - Instagram",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"agent_id\": \"1\",\n    \"utm_source\": \"instagram\",\n    \"utm_medium\": \"social\",\n    \"utm_campaign\": \"bulk_test_instagram\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/analytics/track-click",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"analytics",
+										"track-click"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Track Multiple Clicks - WhatsApp",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"agent_id\": \"1\",\n    \"utm_source\": \"whatsapp\",\n    \"utm_medium\": \"referral\",\n    \"utm_campaign\": \"bulk_test_whatsapp\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/analytics/track-click",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"analytics",
+										"track-click"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Track Multiple Clicks - Email",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"agent_id\": \"1\",\n    \"utm_source\": \"email\",\n    \"utm_medium\": \"newsletter\",\n    \"utm_campaign\": \"bulk_test_email\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/analytics/track-click",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"analytics",
+										"track-click"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Bulk testing for different traffic sources"
+				}
+			],
+			"description": "Comprehensive testing scenarios for agent analytics"
+		},
+		{
+			"name": "🔧 Utilities",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/test/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"test",
+								"health"
+							]
+						},
+						"description": "Check if API is running"
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Test Data",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"agents\": 3,\n    \"clicks_per_agent\": 50\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/test/generate-test-data",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"test",
+								"generate-test-data"
+							]
+						},
+						"description": "Generate additional test data"
+					},
+					"response": []
+				}
+			],
+			"description": "Utility endpoints for testing and development"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set current date variables",
+					"const now = new Date();",
+					"const currentDate = now.toISOString().split('T')[0];",
+					"pm.environment.set('current_date', currentDate);",
+					"",
+					"// Set 7 days ago date",
+					"const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);",
+					"const startDate7DaysAgo = sevenDaysAgo.toISOString().split('T')[0];",
+					"pm.environment.set('start_date_7_days_ago', startDate7DaysAgo);",
+					"",
+					"// Set 30 days ago date",
+					"const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);",
+					"const startDate30DaysAgo = thirtyDaysAgo.toISOString().split('T')[0];",
+					"pm.environment.set('start_date_30_days_ago', startDate30DaysAgo);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test for response time",
+					"pm.test('Response time is acceptable', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"// Global test for content type (for JSON responses)",
+					"if (pm.response.headers.get('Content-Type') && pm.response.headers.get('Content-Type').includes('application/json')) {",
+					"    pm.test('Response is valid JSON', function () {",
+					"        pm.response.to.be.json;",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "agent_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "referral_code",
+			"value": "JOHN001",
+			"type": "string"
+		},
+		{
+			"key": "click_id",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}
